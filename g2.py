@@ -34,6 +34,6 @@ def test_crawl():
                               date_min=None, date_max=None,
                                                    min_size=(200,200), max_size=None)
 
-test_crawl()
-#crawl()
+#test_crawl()
+crawl()
 

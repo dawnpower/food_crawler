@@ -11,6 +11,15 @@ import os,datetime,sys
 from mysqldb import mysqlhelper
 import logging
 
+from threading import current_thread
+
+from PIL import Image
+from six import BytesIO
+from six.moves import queue
+from six.moves.urllib.parse import urlparse
+
+from icrawler.utils import ThreadPool
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 sqlhelper = mysqlhelper()
@@ -115,6 +124,48 @@ class GoogleDownloader(ImageDownloader):
             finally:
                 retry -= 1
 
+    def worker_exec(self,
+                    max_num,
+                    default_ext='',
+                    queue_timeout=5,
+                    req_timeout=5,
+                    **kwargs):
+        """Target method of workers.
+        Get task from ``task_queue`` and then download files and process meta
+        data. A downloader thread will exit in either of the following cases:
+        1. All parser threads have exited and the task_queue is empty.
+        2. Downloaded image number has reached required number(max_num).
+        Args:
+            queue_timeout (int): Timeout of getting tasks from ``task_queue``.
+            req_timeout (int): Timeout of making requests for downloading pages.
+            **kwargs: Arguments passed to the :func:`download` method.
+        """
+        self.max_num = max_num
+        while True:
+            if self.signal.get('reach_max_num'):
+                self.logger.info('downloaded images reach max num, thread %s'
+                                 ' is ready to exit', current_thread().name)
+                break
+            try:
+                task = self.in_queue.get(timeout=queue_timeout)
+            except queue.Empty:
+                if self.signal.get('parser_exited'):
+                    self.logger.info('no more download task for thread %s',
+                                     current_thread().name)
+                    sqlhelper.close()
+                    break
+                else:
+                    self.logger.info('%s is waiting for new download tasks',
+                                     current_thread().name)
+            except:
+                self.logger.error('exception in thread %s',
+                                  current_thread().name)
+            else:
+                self.download(task, default_ext, req_timeout, **kwargs)
+                self.process_meta(task)
+                self.in_queue.task_done()
+        self.logger.info('thread {} exit'.format(current_thread().name))
+
   #  def save_redis(self,path,url):
   #      r.set(path,url)
         
@@ -165,7 +216,6 @@ class GoogleImageCrawler(Crawler):
             file_idx_offset=file_idx_offset)
         super(GoogleImageCrawler, self).crawl(
             feeder_kwargs=feeder_kwargs, downloader_kwargs=downloader_kwargs)
-        sqlhelper.close()
 
     def set_logger(self, log_level=logging.INFO):
         """Configure the logger with log_level."""
