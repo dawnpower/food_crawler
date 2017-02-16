@@ -101,6 +101,7 @@ class GoogleDownloader(ImageDownloader):
                         #self.logger.info("path %s",filename)
                         #self.logger.info("name %s",self.storage.root_dir)
                         food_name = self.storage.root_dir
+                        food_name = os.path.basename(food_name)
                         image_url = file_url
                         dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         sql_insert = 'insert into image_crawler(query_food_name,url,timestamp) values ("%s","%s","%s")'%(food_name,image_url,dt)
