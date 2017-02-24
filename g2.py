@@ -1,7 +1,7 @@
 import os,sys
 from icrawler import Downloader
 #from icrawler.builtin import GoogleImageCrawler
-from google import GoogleImageCrawler
+from googlehelper import GoogleImageCrawler
 import datetime
 from mysqldb import mysqlhelper
 #import redis
@@ -23,7 +23,7 @@ def crawl():
     for item in foodlist:
         root_dir = os.path.join('image',item)
         google_crawler = GoogleImageCrawler(parser_threads=2,downloader_threads=4,storage={'root_dir':root_dir})
-        google_crawler.crawl(keyword=item, offset=0, max_num=5,
+        google_crawler.crawl(keyword=item, offset=0, max_num=10,
                                   date_min=None, date_max=None,
                                                        min_size=(200,200), max_size=None)
 
@@ -34,6 +34,6 @@ def test_crawl():
                               date_min=None, date_max=None,
                                                    min_size=(200,200), max_size=None)
 
-test_crawl()
-#crawl()
+#test_crawl()
+crawl()
 

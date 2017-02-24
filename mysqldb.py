@@ -1,4 +1,15 @@
 import MySQLdb
+import logging
+import sys
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    level=logging.INFO,
+    stream=sys.stderr,
+    filename='crawl.log',
+    filemode='a'
+    )
+logger = logging.getLogger(__name__)
+
 
 class mysqlhelper(object):
     def __init__(self,host='localhost',port=3306,user='root',passwd=''):
@@ -33,6 +44,7 @@ class mysqlhelper(object):
             return result
         except MySQLdb.Error as e:
             print ("mysql error at select:%s\nSQL:%s"%(e,sql))
+	    logger.info("mysql error at select:%s\nSQL:%s"%(e,sql))
 
     def insert(self,sql):
         try:
