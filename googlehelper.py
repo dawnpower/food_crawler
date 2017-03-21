@@ -152,7 +152,7 @@ class GoogleDownloader(ImageDownloader):
                 if self.signal.get('parser_exited'):
                     self.logger.info('no more download task for thread %s',
                                      current_thread().name)
-        	    sqlhelper.close()
+        	    #sqlhelper.close()
                     break
                 else:
                     self.logger.info('%s is waiting for new download tasks',
